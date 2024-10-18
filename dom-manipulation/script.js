@@ -57,8 +57,8 @@ async function postQuoteToServer(quote) {
   }
 }
 
-// Function to sync data with the server and handle conflicts using async/await
-async function syncWithServer() {
+// Function to sync quotes (fetch and update quotes from the server)
+async function syncQuotes() {
   try {
     const serverQuotes = await fetchQuotesFromServer();  // Await the fetching of server quotes
     const localDataUpdated = mergeServerData(serverQuotes);
@@ -98,7 +98,7 @@ function displayNotification(message, type) {
 }
 
 // Periodic sync every 60 seconds
-setInterval(syncWithServer, 60000);
+setInterval(syncQuotes, 60000);  // Changed from syncWithServer to syncQuotes
 
 // Function to display quotes based on the selected category filter
 function filterQuotes() {
