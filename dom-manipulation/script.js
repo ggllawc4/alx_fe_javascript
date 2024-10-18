@@ -24,22 +24,26 @@ function saveQuotes() {
   localStorage.setItem('quotes', JSON.stringify(quotes));
 }
 
-// Function to fetch quotes from the server
-function fetchQuotesFromServer() {
-  return fetch(API_URL)
-    .then(response => response.json())
-    .then(serverQuotes => {
-      // Simulate server response structure with text and category
-      return serverQuotes.map(q => ({
-        text: q.title, // Simulating quote text with "title"
-        category: "Server" // Assume a default category for server quotes
-      }));
-    });
+// Function to fetch quotes from the server using async/await
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch(API_URL);  // Await the fetch call
+    const serverQuotes = await response.json();  // Await the response parsing
+
+    // Simulate server response structure with text and category
+    return serverQuotes.map(q => ({
+      text: q.title, // Simulating quote text with "title"
+      category: "Server" // Assume a default category for server quotes
+    }));
+  } catch (error) {
+    throw new Error('Error fetching quotes from the server');
+  }
 }
 
-// Function to sync data with the server and handle conflicts
-function syncWithServer() {
-  fetchQuotesFromServer().then(serverQuotes => {
+// Function to sync data with the server and handle conflicts using async/await
+async function syncWithServer() {
+  try {
+    const serverQuotes = await fetchQuotesFromServer();  // Await the fetching of server quotes
     const localDataUpdated = mergeServerData(serverQuotes);
 
     if (localDataUpdated) {
@@ -48,7 +52,9 @@ function syncWithServer() {
     } else {
       displayNotification('No new quotes from server.', 'info');
     }
-  }).catch(() => displayNotification('Error syncing with server.', 'error'));
+  } catch (error) {
+    displayNotification('Error syncing with server.', 'error');
+  }
 }
 
 // Function to merge server data and handle conflicts (server data takes precedence)
