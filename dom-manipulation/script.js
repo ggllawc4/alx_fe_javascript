@@ -33,7 +33,7 @@ function saveQuotes() {
 function filterQuotes() {
   const selectedCategory = document.getElementById('categoryFilter').value;
   const quoteDisplay = document.getElementById('quoteDisplay');
-  quoteDisplay.innerHTML = '';
+  quoteDisplay.textContent = ''; // Clear previous content using textContent
 
   // Filter and display quotes based on the selected category
   const filteredQuotes = quotes.filter(quote => 
@@ -41,7 +41,9 @@ function filterQuotes() {
   );
 
   filteredQuotes.forEach(quote => {
-    quoteDisplay.innerHTML += `<p>${quote.text} - <strong>${quote.category}</strong></p>`;
+    const quoteElement = document.createElement('p');
+    quoteElement.textContent = `${quote.text} - ${quote.category}`;
+    quoteDisplay.appendChild(quoteElement);  // Append new text elements to the DOM
   });
 
   // Save the selected category filter in local storage
@@ -56,13 +58,17 @@ function populateCategories() {
   const categories = [...new Set(quotes.map(quote => quote.category))];
 
   // Remove any existing options except "All Categories"
-  categoryFilter.innerHTML = '<option value="all">All Categories</option>';
+  categoryFilter.textContent = ''; // Clear previous options using textContent
+  const defaultOption = document.createElement('option');
+  defaultOption.value = 'all';
+  defaultOption.textContent = 'All Categories';
+  categoryFilter.appendChild(defaultOption);
 
   // Dynamically add unique categories to the dropdown
   categories.forEach(category => {
     const option = document.createElement('option');
     option.value = category;
-    option.innerText = category;
+    option.textContent = category; // Use textContent for option text
     categoryFilter.appendChild(option);
   });
 }
@@ -138,40 +144,3 @@ document.getElementById('addQuoteBtn').addEventListener('click', addQuote);
 
 // Event listener for exporting quotes to JSON
 document.getElementById('exportQuotes').addEventListener('click', exportQuotes);
-
-
-// Function to import quotes from JSON file
-function importFromJsonFile(event) {
-  const fileReader = new FileReader();
-  fileReader.onload = function(event) {
-    try {
-      const importedQuotes = JSON.parse(event.target.result);
-      if (Array.isArray(importedQuotes)) {
-        quotes.push(...importedQuotes);
-        saveQuotes();
-        alert('Quotes imported successfully!');
-        showRandomQuote();
-      } else {
-        alert('Invalid JSON format. Please provide an array of quotes.');
-      }
-    } catch (e) {
-      alert('Error parsing JSON file.');
-    }
-  };
-  fileReader.readAsText(event.target.files[0]);
-}
-
-// Load quotes from local storage on page load
-loadQuotes();
-
-// Event listener for showing a new random quote
-document.getElementById('newQuote').addEventListener('click', showRandomQuote);
-
-// Event listener for adding a new quote
-document.getElementById('addQuoteBtn').addEventListener('click', addQuote);
-
-// Event listener for exporting quotes to JSON
-document.getElementById('exportQuotes').addEventListener('click', exportQuotes);
-
-// Initial quote display on page load
-showRandomQuote();
