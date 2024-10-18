@@ -24,6 +24,59 @@ function saveQuotes() {
   localStorage.setItem('quotes', JSON.stringify(quotes));
 }
 
+// Function to fetch quotes from the server
+function fetchQuotesFromServer() {
+  return fetch(API_URL)
+    .then(response => response.json())
+    .then(serverQuotes => {
+      // Simulate server response structure with text and category
+      return serverQuotes.map(q => ({
+        text: q.title, // Simulating quote text with "title"
+        category: "Server" // Assume a default category for server quotes
+      }));
+    });
+}
+
+// Function to sync data with the server and handle conflicts
+function syncWithServer() {
+  fetchQuotesFromServer().then(serverQuotes => {
+    const localDataUpdated = mergeServerData(serverQuotes);
+
+    if (localDataUpdated) {
+      saveQuotes();
+      displayNotification('Quotes synced with server. Conflicts resolved.', 'success');
+    } else {
+      displayNotification('No new quotes from server.', 'info');
+    }
+  }).catch(() => displayNotification('Error syncing with server.', 'error'));
+}
+
+// Function to merge server data and handle conflicts (server data takes precedence)
+function mergeServerData(serverQuotes) {
+  let dataUpdated = false;
+
+  serverQuotes.forEach(serverQuote => {
+    const existsLocally = quotes.some(localQuote => localQuote.text === serverQuote.text);
+
+    if (!existsLocally) {
+      quotes.push(serverQuote);  // Add new quote from server
+      dataUpdated = true;
+    }
+  });
+
+  return dataUpdated;
+}
+
+// Function to display sync or conflict notifications
+function displayNotification(message, type) {
+  const notificationDiv = document.getElementById('syncNotification');
+  notificationDiv.textContent = message;
+  notificationDiv.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue';
+}
+
+// Periodic sync every 60 seconds
+setInterval(syncWithServer, 60000);
+
 // Function to display quotes based on the selected category filter
 function filterQuotes() {
   const selectedCategory = document.getElementById('categoryFilter').value;
@@ -121,55 +174,6 @@ function importFromJsonFile(event) {
   };
   fileReader.readAsText(event.target.files[0]);
 }
-
-// Function to simulate server sync
-function syncWithServer() {
-  fetch(API_URL)
-    .then(response => response.json())
-    .then(serverQuotes => {
-      // Simulate server response structure with text and category
-      const formattedServerQuotes = serverQuotes.map(q => ({
-        text: q.title, // Simulating quote text with "title"
-        category: "Server" // Assume a default category for server quotes
-      }));
-
-      const localDataUpdated = mergeServerData(formattedServerQuotes);
-      
-      if (localDataUpdated) {
-        saveQuotes();
-        displayNotification('Quotes synced with server. Conflicts resolved.', 'success');
-      } else {
-        displayNotification('No new quotes from server.', 'info');
-      }
-    })
-    .catch(() => displayNotification('Error syncing with server.', 'error'));
-}
-
-// Function to merge server data and handle conflicts (server data takes precedence)
-function mergeServerData(serverQuotes) {
-  let dataUpdated = false;
-
-  serverQuotes.forEach(serverQuote => {
-    const existsLocally = quotes.some(localQuote => localQuote.text === serverQuote.text);
-
-    if (!existsLocally) {
-      quotes.push(serverQuote);  // Add new quote from server
-      dataUpdated = true;
-    }
-  });
-
-  return dataUpdated;
-}
-
-// Function to display sync or conflict notifications
-function displayNotification(message, type) {
-  const notificationDiv = document.getElementById('syncNotification');
-  notificationDiv.textContent = message;
-  notificationDiv.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue';
-}
-
-// Periodic sync every 60 seconds
-setInterval(syncWithServer, 60000);
 
 // Load quotes from local storage on page load
 loadQuotes();
