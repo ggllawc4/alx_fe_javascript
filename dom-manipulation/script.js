@@ -65,7 +65,7 @@ async function syncQuotes() {
 
     if (localDataUpdated) {
       saveQuotes();
-      displayNotification('Quotes synced with server. Conflicts resolved.', 'success');
+      displayNotification('Quotes synced with server!', 'success');
     } else {
       displayNotification('No new quotes from server.', 'info');
     }
