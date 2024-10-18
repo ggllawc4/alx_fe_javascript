@@ -29,6 +29,18 @@ function saveQuotes() {
   localStorage.setItem('quotes', JSON.stringify(quotes));
 }
 
+// Function to display a random quote
+function showRandomQuote() {
+  if (quotes.length > 0) {
+    const randomIndex = Math.floor(Math.random() * quotes.length); // Using Math.random to select a random quote
+    const randomQuote = quotes[randomIndex];
+    const quoteDisplay = document.getElementById('quoteDisplay');
+    quoteDisplay.textContent = `${randomQuote.text} - ${randomQuote.category}`;  // Set the text content of the random quote
+  } else {
+    document.getElementById('quoteDisplay').textContent = 'No quotes available.';
+  }
+}
+
 // Function to display quotes based on the selected category filter
 function filterQuotes() {
   const selectedCategory = document.getElementById('categoryFilter').value;
@@ -42,7 +54,7 @@ function filterQuotes() {
 
   filteredQuotes.forEach(quote => {
     const quoteElement = document.createElement('p');
-    quoteElement.textContent = `${quote.text} - ${quote.category}`;
+    quoteElement.textContent = `${quote.text} - ${quote.category}`;  // Replaced innerHTML with textContent
     quoteDisplay.appendChild(quoteElement);  // Append new text elements to the DOM
   });
 
