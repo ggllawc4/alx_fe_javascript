@@ -1,5 +1,6 @@
 // Array to hold quotes and categories
 let quotes = [];
+const API_URL = 'https://jsonplaceholder.typicode.com/posts'; // Mock API for simulation
 
 // Load quotes from local storage when the page loads
 function loadQuotes() {
@@ -14,12 +15,6 @@ function loadQuotes() {
     ];
   }
 
-  // Load the last selected category filter from local storage
-  const savedCategory = localStorage.getItem('selectedCategory');
-  if (savedCategory) {
-    document.getElementById('categoryFilter').value = savedCategory;
-  }
-
   populateCategories();
   filterQuotes();
 }
@@ -27,18 +22,6 @@ function loadQuotes() {
 // Save quotes to local storage
 function saveQuotes() {
   localStorage.setItem('quotes', JSON.stringify(quotes));
-}
-
-// Function to display a random quote
-function showRandomQuote() {
-  if (quotes.length > 0) {
-    const randomIndex = Math.floor(Math.random() * quotes.length); // Using Math.random to select a random quote
-    const randomQuote = quotes[randomIndex];
-    const quoteDisplay = document.getElementById('quoteDisplay');
-    quoteDisplay.textContent = `${randomQuote.text} - ${randomQuote.category}`;  // Set the text content of the random quote
-  } else {
-    document.getElementById('quoteDisplay').textContent = 'No quotes available.';
-  }
 }
 
 // Function to display quotes based on the selected category filter
@@ -54,12 +37,9 @@ function filterQuotes() {
 
   filteredQuotes.forEach(quote => {
     const quoteElement = document.createElement('p');
-    quoteElement.textContent = `${quote.text} - ${quote.category}`;  // Replaced innerHTML with textContent
+    quoteElement.textContent = `${quote.text} - ${quote.category}`;
     quoteDisplay.appendChild(quoteElement);  // Append new text elements to the DOM
   });
-
-  // Save the selected category filter in local storage
-  localStorage.setItem('selectedCategory', selectedCategory);
 }
 
 // Function to dynamically populate the category dropdown
@@ -69,14 +49,12 @@ function populateCategories() {
   // Get unique categories from the quotes array
   const categories = [...new Set(quotes.map(quote => quote.category))];
 
-  // Remove any existing options except "All Categories"
   categoryFilter.textContent = ''; // Clear previous options using textContent
   const defaultOption = document.createElement('option');
   defaultOption.value = 'all';
   defaultOption.textContent = 'All Categories';
   categoryFilter.appendChild(defaultOption);
 
-  // Dynamically add unique categories to the dropdown
   categories.forEach(category => {
     const option = document.createElement('option');
     option.value = category;
@@ -113,7 +91,6 @@ function exportQuotes() {
   const dataStr = JSON.stringify(quotes, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
 
-  // Use Blob and createObjectURL for the download functionality
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -144,6 +121,55 @@ function importFromJsonFile(event) {
   };
   fileReader.readAsText(event.target.files[0]);
 }
+
+// Function to simulate server sync
+function syncWithServer() {
+  fetch(API_URL)
+    .then(response => response.json())
+    .then(serverQuotes => {
+      // Simulate server response structure with text and category
+      const formattedServerQuotes = serverQuotes.map(q => ({
+        text: q.title, // Simulating quote text with "title"
+        category: "Server" // Assume a default category for server quotes
+      }));
+
+      const localDataUpdated = mergeServerData(formattedServerQuotes);
+      
+      if (localDataUpdated) {
+        saveQuotes();
+        displayNotification('Quotes synced with server. Conflicts resolved.', 'success');
+      } else {
+        displayNotification('No new quotes from server.', 'info');
+      }
+    })
+    .catch(() => displayNotification('Error syncing with server.', 'error'));
+}
+
+// Function to merge server data and handle conflicts (server data takes precedence)
+function mergeServerData(serverQuotes) {
+  let dataUpdated = false;
+
+  serverQuotes.forEach(serverQuote => {
+    const existsLocally = quotes.some(localQuote => localQuote.text === serverQuote.text);
+
+    if (!existsLocally) {
+      quotes.push(serverQuote);  // Add new quote from server
+      dataUpdated = true;
+    }
+  });
+
+  return dataUpdated;
+}
+
+// Function to display sync or conflict notifications
+function displayNotification(message, type) {
+  const notificationDiv = document.getElementById('syncNotification');
+  notificationDiv.textContent = message;
+  notificationDiv.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue';
+}
+
+// Periodic sync every 60 seconds
+setInterval(syncWithServer, 60000);
 
 // Load quotes from local storage on page load
 loadQuotes();
